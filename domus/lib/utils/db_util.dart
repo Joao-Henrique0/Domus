@@ -71,6 +71,14 @@ class DbUtil {
       )
     ''');
 
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS shopping_items(
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        purchased INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
+
     await _ensureColumn(
       db,
       table: 'transactions',
@@ -212,6 +220,15 @@ class DbUtil {
         'expense_id': data['expense_id'],
         'recurring_source_id': data['recurring_source_id'],
         'paid_date': data['paid_date'],
+      };
+    }
+
+    if (table == 'shopping_items') {
+      return {
+        'id': data['id'],
+        'name': data['name'],
+        'purchased':
+            (data['purchased'] == true || data['purchased'] == 1) ? 1 : 0,
       };
     }
 

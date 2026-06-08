@@ -5,6 +5,7 @@ import 'package:domus/components/main_drawer.dart';
 import 'package:domus/pages/bills_page.dart';
 import 'package:domus/pages/chatbot_page.dart';
 import 'package:domus/pages/expenses_page.dart';
+import 'package:domus/pages/shopping_list_page.dart';
 import 'package:domus/pages/tasks_page.dart';
 import '../utils/app_routes.dart';
 
@@ -55,6 +56,11 @@ class _TabsScreenState extends State<TabsScreen> {
             icon: const Icon(Icons.add),
           ),
         ],
+      },
+      {
+        'title': 'Lista de Compras',
+        'screen': const ShoppingListPage(),
+        'actions': <Widget>[],
       },
       {
         'title': 'ChatBot',
@@ -113,6 +119,11 @@ class _TabsScreenState extends State<TabsScreen> {
             icon: const Icon(Icons.receipt_long),
             label: 'Contas',
             backgroundColor: color,
+          ),
+          BottomNavigationBarItem(
+            backgroundColor: color,
+            icon: const Icon(Icons.shopping_cart),
+            label: 'Compras',
           ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.chat),

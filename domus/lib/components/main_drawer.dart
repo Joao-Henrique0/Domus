@@ -32,7 +32,7 @@ class MainDrawer extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.notifications),
-            title: const Text('Configuracoes de notificacao'),
+            title: const Text('Notificacoes de tarefas'),
             onTap: () => Navigator.pushNamed(context, AppRoutes.notiSettings),
           ),
           ListTile(

@@ -6,6 +6,7 @@ class AppRoutes {
   static const transactionForm = '/transaction-form';
   static const billForm = '/bill-form';
   static const billNotiSettings = '/bill-noti-settings';
+  static const shoppingList = '/shopping-list';
   static const expenseTypes = '/expense-types';
   static const chatBot = '/chatBot';
   static const notiSettings = '/noti-settings';

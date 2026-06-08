@@ -1,6 +1,7 @@
 import 'package:app_links/app_links.dart';
 import 'package:domus/models/bill_list.dart';
 import 'package:domus/models/expense_type_list.dart';
+import 'package:domus/models/shopping_list.dart';
 import 'package:domus/models/transaction_list.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +17,7 @@ import 'package:domus/pages/expense_types_page.dart';
 import 'package:domus/pages/login_page.dart';
 import 'package:domus/pages/notification_settings.dart';
 import 'package:domus/pages/register_page.dart';
+import 'package:domus/pages/shopping_list_page.dart';
 import 'package:domus/pages/tabs_page.dart';
 import 'package:domus/pages/task_form.dart';
 import 'package:domus/theme/theme_provider.dart';
@@ -53,6 +55,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   late TransactionList _transactionList;
   late BillList _billList;
   late ExpenseTypeList _expenseTypeList;
+  late ShoppingList _shoppingList;
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _sub;
 
@@ -64,6 +67,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     _transactionList = TransactionList();
     _billList = BillList(_transactionList);
     _expenseTypeList = ExpenseTypeList();
+    _shoppingList = ShoppingList();
     _initDeepLinkListener();
   }
 
@@ -115,6 +119,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         ChangeNotifierProvider<TransactionList>.value(value: _transactionList),
         ChangeNotifierProvider<BillList>.value(value: _billList),
         ChangeNotifierProvider<ExpenseTypeList>.value(value: _expenseTypeList),
+        ChangeNotifierProvider<ShoppingList>.value(value: _shoppingList),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, _) {
@@ -128,6 +133,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
               AppRoutes.billForm: (ctx) => const BillForm(),
               AppRoutes.billNotiSettings:
                   (ctx) => const BillNotificationSettings(),
+              AppRoutes.shoppingList: (ctx) => const ShoppingListPage(),
               AppRoutes.expenseTypes: (ctx) => const ExpenseTypesPage(),
               AppRoutes.chatBot: (ctx) => const ChatbotScreen(),
               AppRoutes.login: (ctx) => const LoginPage(),
