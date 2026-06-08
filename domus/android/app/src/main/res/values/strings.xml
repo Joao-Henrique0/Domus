@@ -1,0 +1,4 @@
+<resources>
+    <string name="shortcut_short_label">Adicionar tarefa</string>
+    <string name="shortcut_long_label">Abrir tela de nova tarefa</string>
+</resources>

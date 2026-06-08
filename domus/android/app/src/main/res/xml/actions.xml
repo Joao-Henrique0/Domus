@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<actions xmlns:android="http://schemas.android.com/apk/res/android">
+    <action android:name="actions.intent.CREATE_TASK">
+        <fulfillment
+            android:targetPackage="com.example.domus"
+            android:targetClass="com.example.domus.MainActivity">
+            <parameter
+                android:name="task.name"
+                android:key="title" />
+        </fulfillment>
+    </action>
+</actions>
