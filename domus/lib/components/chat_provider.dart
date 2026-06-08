@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,8 +11,10 @@ import 'package:domus/models/task_list.dart';
 
 class ChatProvider with ChangeNotifier {
   final List<ChatMessage> _messages = [];
+  bool _isSending = false;
 
   List<ChatMessage> get messages => List.unmodifiable(_messages);
+  bool get isSending => _isSending;
 
   ChatProvider() {
     loadMessages();
@@ -21,7 +24,13 @@ class ChatProvider with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getStringList('chat_messages') ?? [];
     _messages.clear();
-    _messages.addAll(saved.map((e) => ChatMessage.fromJson(json.decode(e))));
+    for (final item in saved) {
+      try {
+        _messages.add(ChatMessage.fromJson(json.decode(item)));
+      } catch (_) {
+        debugPrint('Mensagem antiga do chat ignorada por JSON invalido.');
+      }
+    }
     notifyListeners();
   }
 
@@ -32,10 +41,12 @@ class ChatProvider with ChangeNotifier {
   }
 
   Future<void> sendMessage(String userMessage, BuildContext context) async {
-    if (userMessage.trim().isEmpty) return;
+    final trimmedMessage = userMessage.trim();
+    if (trimmedMessage.isEmpty || _isSending) return;
 
     final taskList = Provider.of<TaskList>(context, listen: false);
-    _messages.add(ChatMessage(text: userMessage, isUser: true));
+    _isSending = true;
+    _messages.add(ChatMessage(text: trimmedMessage, isUser: true));
     notifyListeners();
     await saveMessages();
 
@@ -47,22 +58,23 @@ class ChatProvider with ChangeNotifier {
         _messages.add(
           ChatMessage(text: "Usuário não autenticado.", isUser: false),
         );
+        _isSending = false;
         notifyListeners();
         await saveMessages();
         return;
       }
 
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:5000/chatbot'),
+        Uri.parse(dotenv.env['CHATBOT_URL'] ?? 'http://10.0.2.2:5000/chatbot'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({"message": userMessage}),
-      );
+        body: jsonEncode({"message": trimmedMessage}),
+      ).timeout(const Duration(seconds: 20));
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        final data = json.decode(utf8.decode(response.bodyBytes));
         final responseData = data["response"];
         final intent = responseData?["intent"];
         final taskData = responseData?["data"];
@@ -238,6 +250,8 @@ class ChatProvider with ChangeNotifier {
       _messages.add(
         ChatMessage(text: "Erro ao enviar mensagem: $e", isUser: false),
       );
+    } finally {
+      _isSending = false;
     }
 
     notifyListeners();

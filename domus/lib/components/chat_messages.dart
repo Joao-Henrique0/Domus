@@ -8,24 +8,46 @@ class ChatMessages extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final chat = Provider.of<ChatProvider>(context);
-    final theme = Theme.of(context); // Adicione esta linha
+    final theme = Theme.of(context);
+
+    if (chat.messages.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            'Envie uma mensagem para criar, listar ou atualizar tarefas.',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyMedium,
+          ),
+        ),
+      );
+    }
 
     return ListView.builder(
-      key: ValueKey(theme.brightness), // Força rebuild ao trocar o tema
+      key: ValueKey(theme.brightness),
       padding: const EdgeInsets.all(10),
       itemCount: chat.messages.length,
       itemBuilder: (context, index) {
         final message = chat.messages[index];
+        final bubbleColor =
+            message.isUser
+                ? theme.colorScheme.tertiary
+                : theme.colorScheme.primary;
+        final bubbleTextColor =
+            message.isUser
+                ? theme.colorScheme.onSurface
+                : theme.colorScheme.onPrimary;
+
         return Dismissible(
-          key: UniqueKey(),
+          key: ValueKey('${message.isUser}-${message.text}-$index'),
           direction: DismissDirection.endToStart,
           background: Container(
             color: Colors.transparent,
             alignment: Alignment.centerRight,
             padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: const Icon(
+            child: Icon(
               Icons.delete_forever,
-              color: Color.fromARGB(255, 143, 136, 136),
+              color: theme.colorScheme.error,
               size: 32,
             ),
           ),
@@ -41,10 +63,7 @@ class ChatMessages extends StatelessWidget {
                 minWidth: 40,
               ),
               decoration: BoxDecoration(
-                color:
-                    message.isUser
-                        ? Colors.grey.shade200
-                        : Theme.of(context).colorScheme.primary,
+                color: bubbleColor,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(16),
                   topRight: const Radius.circular(16),
@@ -57,13 +76,6 @@ class ChatMessages extends StatelessWidget {
                           ? const Radius.circular(4)
                           : const Radius.circular(16),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 2,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
               ),
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
               margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
@@ -71,7 +83,7 @@ class ChatMessages extends StatelessWidget {
                 message.text,
                 textAlign: message.isUser ? TextAlign.right : TextAlign.left,
                 style: TextStyle(
-                  color: message.isUser ? Colors.black87 : Colors.white,
+                  color: bubbleTextColor,
                   fontSize: 15,
                 ),
               ),

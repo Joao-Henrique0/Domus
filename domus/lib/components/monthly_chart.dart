@@ -58,6 +58,20 @@ class MonthlyChart extends StatelessWidget {
     )!;
   }
 
+  Color getDayTextColor(double value, double maxValue, BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    if (!isDark || value == 0 || maxValue == 0) {
+      return theme.colorScheme.onSurface;
+    }
+
+    final colorIntensity = value / maxValue;
+    if (colorIntensity > 0.55) {
+      return theme.colorScheme.onSecondary;
+    }
+    return theme.colorScheme.onSurface;
+  }
+
   @override
   Widget build(BuildContext context) {
     final days = calendarDays;
@@ -95,6 +109,14 @@ class MonthlyChart extends StatelessWidget {
                         children: List.generate(7, (column) {
                           final index = row * 7 + column;
                           final day = index < days.length ? days[index] : null;
+                          final dayTextColor =
+                              day == null
+                                  ? textColor
+                                  : getDayTextColor(
+                                    day.value,
+                                    monthMaxValue,
+                                    context,
+                                  );
                           return Expanded(
                             child: Padding(
                               padding: const EdgeInsets.all(2),
@@ -120,7 +142,7 @@ class MonthlyChart extends StatelessWidget {
                                               day.day.toString(),
                                               style: TextStyle(
                                                 fontSize: 12,
-                                                color: textColor,
+                                                color: dayTextColor,
                                                 fontWeight: FontWeight.w700,
                                               ),
                                             ),
@@ -130,7 +152,7 @@ class MonthlyChart extends StatelessWidget {
                                                 overflow: TextOverflow.ellipsis,
                                                 style: TextStyle(
                                                   fontSize: 8,
-                                                  color: textColor,
+                                                  color: dayTextColor,
                                                   fontWeight: FontWeight.w600,
                                                 ),
                                               ),

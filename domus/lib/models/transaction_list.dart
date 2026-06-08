@@ -56,6 +56,8 @@ class TransactionList with ChangeNotifier {
   }
 
   Future<void> updateTransaction(Transaction transaction) async {
+    if (transaction.isBillGenerated) return;
+
     final index = _transactions.indexWhere((t) => t.id == transaction.id);
     if (index >= 0) {
       _transactions[index] = transaction;
@@ -107,6 +109,8 @@ class TransactionList with ChangeNotifier {
   }
 
   Future<void> removeTransaction(Transaction transaction) async {
+    if (transaction.isBillGenerated) return;
+
     final index = _transactions.indexWhere((t) => t.id == transaction.id);
     if (index >= 0) {
       _transactions.removeAt(index);

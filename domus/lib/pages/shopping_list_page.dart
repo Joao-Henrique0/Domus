@@ -48,7 +48,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
           }
 
           return Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
             child: Column(
               children: [
                 Row(
@@ -76,7 +76,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
                 Expanded(
                   child: Consumer<ShoppingList>(
                     builder: (context, shoppingList, _) {
@@ -94,6 +94,7 @@ class _ShoppingListPageState extends State<ShoppingListPage> {
                       }
 
                       return ListView.builder(
+                        padding: const EdgeInsets.only(bottom: 4),
                         itemCount: shoppingList.items.length,
                         itemBuilder: (context, index) {
                           return _ShoppingItemTile(

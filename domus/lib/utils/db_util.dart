@@ -120,13 +120,24 @@ class DbUtil {
   }
 
   static Future<void> _seedExpenseTypes(Database db) async {
-    const defaults = [
+    const oldDefaults = [
       'Alimentacao',
       'Transporte',
       'Moradia',
       'Saude',
       'Lazer',
+    ];
+    for (final name in oldDefaults) {
+      await db.delete(
+        'expense_types',
+        where: 'id = ?',
+        whereArgs: [name.toLowerCase()],
+      );
+    }
+
+    const defaults = [
       'Contas',
+      'Compras',
     ];
     for (final name in defaults) {
       await db.insert('expense_types', {

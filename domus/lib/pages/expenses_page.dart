@@ -15,7 +15,10 @@ class ExpensesPage extends StatefulWidget {
 }
 
 class _ExpensesPageState extends State<ExpensesPage> {
+  static const _allCategories = 'Todos';
+
   DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
+  String _selectedCategory = _allCategories;
   late Future<void> _loadTransactionsFuture;
 
   @override
@@ -46,11 +49,40 @@ class _ExpensesPageState extends State<ExpensesPage> {
                   ? const Center(child: CircularProgressIndicator())
                   : Consumer<TransactionList>(
                     builder: (ctx, transactionList, _) {
-                      final monthlyTransactions = transactionList
+                      final allMonthlyTransactions = transactionList
                           .transactionsForMonth(_selectedMonth);
-                      final monthTotal = transactionList.monthTotalValue(
-                        _selectedMonth,
+                      final categories = <String>{
+                        _allCategories,
+                        ...allMonthlyTransactions.map(
+                          (transaction) => transaction.category,
+                        ),
+                      }.toList();
+                      if (!categories.contains(_selectedCategory)) {
+                        _selectedCategory = _allCategories;
+                      }
+
+                      final monthlyTransactions =
+                          _selectedCategory == _allCategories
+                              ? allMonthlyTransactions
+                              : allMonthlyTransactions
+                                  .where(
+                                    (transaction) =>
+                                        transaction.category ==
+                                        _selectedCategory,
+                                  )
+                                  .toList();
+                      final monthTotal = monthlyTransactions.fold(
+                        0.0,
+                        (sum, transaction) => sum + transaction.value,
                       );
+                      final categoryTotals = <String, double>{};
+                      for (final transaction in monthlyTransactions) {
+                        categoryTotals.update(
+                          transaction.category,
+                          (value) => value + transaction.value,
+                          ifAbsent: () => transaction.value,
+                        );
+                      }
 
                       return Column(
                         children: [
@@ -82,6 +114,29 @@ class _ExpensesPageState extends State<ExpensesPage> {
                               ],
                             ),
                           ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                            child: DropdownButtonFormField<String>(
+                              value: _selectedCategory,
+                              decoration: const InputDecoration(
+                                labelText: 'Filtrar por tipo',
+                                border: OutlineInputBorder(),
+                              ),
+                              items:
+                                  categories
+                                      .map(
+                                        (category) => DropdownMenuItem(
+                                          value: category,
+                                          child: Text(category),
+                                        ),
+                                      )
+                                      .toList(),
+                              onChanged: (value) {
+                                if (value == null) return;
+                                setState(() => _selectedCategory = value);
+                              },
+                            ),
+                          ),
                           Expanded(
                             child: ListView(
                               children: [
@@ -90,10 +145,7 @@ class _ExpensesPageState extends State<ExpensesPage> {
                                   child: PageView(
                                     children: [
                                       MonthlyPieChart(
-                                        categoryTotals: transactionList
-                                            .categoryTotalsForMonth(
-                                              _selectedMonth,
-                                            ),
+                                        categoryTotals: categoryTotals,
                                       ),
                                       MonthlyChart(
                                         monthlyTransactions:
@@ -109,7 +161,9 @@ class _ExpensesPageState extends State<ExpensesPage> {
                                     vertical: 8,
                                   ),
                                   child: Text(
-                                    'Total do mes R\$${NumTranform.formatValue(monthTotal)}',
+                                    _selectedCategory == _allCategories
+                                        ? 'Total do mes R\$${NumTranform.formatValue(monthTotal)}'
+                                        : 'Total em $_selectedCategory R\$${NumTranform.formatValue(monthTotal)}',
                                     style:
                                         Theme.of(context).textTheme.titleLarge,
                                   ),

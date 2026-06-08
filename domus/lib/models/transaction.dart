@@ -12,4 +12,6 @@ class Transaction {
     required this.value,
     required this.date,
   });
+
+  bool get isBillGenerated => id.startsWith('bill_');
 }

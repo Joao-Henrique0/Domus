@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:domus/models/shopping_item.dart';
+import 'package:domus/models/transaction.dart';
+import 'package:domus/models/transaction_list.dart';
 import 'package:domus/utils/db_util.dart';
 
 class ShoppingList with ChangeNotifier {
@@ -17,6 +19,8 @@ class ShoppingList with ChangeNotifier {
   }
 
   int get itemsCount => _items.length;
+
+  int get purchasedCount => _items.where((item) => item.purchased).length;
 
   Future<void> loadItems() async {
     final dataList = await DbUtil.getData('shopping_items');
@@ -62,6 +66,40 @@ class ShoppingList with ChangeNotifier {
     _items.removeWhere((current) => current.id == item.id);
     notifyListeners();
     await DbUtil.deleteData(item.id, 'shopping_items');
+  }
+
+  Future<void> removeAllItems() async {
+    final itemsToRemove = [..._items];
+    _items.clear();
+    notifyListeners();
+
+    for (final item in itemsToRemove) {
+      await DbUtil.deleteData(item.id, 'shopping_items');
+    }
+  }
+
+  Future<void> finishPurchase({
+    required double value,
+    required TransactionList transactionList,
+  }) async {
+    final purchasedItems = _items.where((item) => item.purchased).toList();
+    if (purchasedItems.isEmpty) return;
+
+    final transaction = Transaction(
+      id: 'shopping_${DateTime.now().millisecondsSinceEpoch}',
+      title: 'Compra',
+      category: 'Compras',
+      value: value,
+      date: DateTime.now(),
+    );
+    await transactionList.addTransaction(transaction);
+
+    for (final item in purchasedItems) {
+      await DbUtil.deleteData(item.id, 'shopping_items');
+    }
+
+    _items.removeWhere((item) => item.purchased);
+    notifyListeners();
   }
 
   Map<String, Object?> _toDbMap(ShoppingItem item) {

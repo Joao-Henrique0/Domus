@@ -18,8 +18,16 @@ class _ChatInputFieldState extends State<ChatInputField> {
   String _lastWords = '';
 
   void _sendToChatbot(String message, ChatProvider chat, BuildContext context) {
+    if (chat.isSending) return;
     _controller.clear();
     chat.sendMessage(message, context);
+  }
+
+  @override
+  void dispose() {
+    _speech.stop();
+    _controller.dispose();
+    super.dispose();
   }
 
   Future<void> startListening(ChatProvider chat) async {
@@ -34,6 +42,7 @@ class _ChatInputFieldState extends State<ChatInputField> {
       setState(() => _isListening = true);
       _speech.listen(
         onResult: (result) {
+          if (!mounted) return;
           setState(() {
             _lastWords = result.recognizedWords;
             _isListening = !result.finalResult;
@@ -51,7 +60,7 @@ class _ChatInputFieldState extends State<ChatInputField> {
 
   @override
   Widget build(BuildContext context) {
-    final chat = Provider.of<ChatProvider>(context, listen: false);
+    final chat = Provider.of<ChatProvider>(context);
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -74,11 +83,19 @@ class _ChatInputFieldState extends State<ChatInputField> {
                   borderSide: BorderSide.none,
                 ),
                 suffixIcon: IconButton(
-                  icon: Icon(
-                    Icons.send,
-                    color: Theme.of(context).colorScheme.secondary,
-                  ),
+                  icon:
+                      chat.isSending
+                          ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                          : Icon(
+                            Icons.send,
+                            color: Theme.of(context).colorScheme.secondary,
+                          ),
                   onPressed: () {
+                    if (chat.isSending) return;
                     final text = _controller.text;
                     _controller.clear();
                     chat.sendMessage(text, context);
@@ -86,7 +103,10 @@ class _ChatInputFieldState extends State<ChatInputField> {
                 ),
                 prefixIcon: IconButton(
                   icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
-                  onPressed: () => startListening(chat),
+                  onPressed:
+                      chat.isSending || _isListening
+                          ? null
+                          : () => startListening(chat),
                 ),
               ),
             ),

@@ -66,7 +66,7 @@ class MainDrawer extends StatelessWidget {
             title: Text(
               user != null
                   ? 'Backup ativo e ChatBot conectado'
-                  : 'Login para Backup e ChatBot',
+                  : 'Entrar para Backup e ChatBot',
             ),
             onTap: () async {
               if (user == null) {

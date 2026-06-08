@@ -68,15 +68,17 @@ class _LoginPageState extends State<LoginPage> {
         serverClientId: webClientId,
       );
       final googleUser = await googleSignIn.signIn();
-      final googleAuth = await googleUser!.authentication;
+      if (googleUser == null) return;
+
+      final googleAuth = await googleUser.authentication;
       final accessToken = googleAuth.accessToken;
       final idToken = googleAuth.idToken;
 
       if (accessToken == null) {
-        throw Exception('No Access Token found.');
+        throw Exception('Token de acesso nao encontrado.');
       }
       if (idToken == null) {
-        throw Exception('No ID Token found.');
+        throw Exception('Token de identidade nao encontrado.');
       }
 
       final response = await supabase.auth.signInWithIdToken(
@@ -94,7 +96,7 @@ class _LoginPageState extends State<LoginPage> {
       debugPrint('Stack: $s');
       if (!mounted) return;
       setState(() {
-        _error = 'Erro ao logar com Google: $e';
+        _error = 'Erro ao entrar com Google: $e';
       });
     } finally {
       if (mounted) {
@@ -114,46 +116,152 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: 'E-mail'),
+      appBar: AppBar(
+        title: const Text('Entrar'),
+        leading: IconButton(
+          tooltip: 'Voltar',
+          onPressed: () => Navigator.pushReplacementNamed(context, '/'),
+          icon: const Icon(Icons.arrow_back),
+        ),
+      ),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _LoginMark(theme: theme),
+                  const SizedBox(height: 28),
+                  Text(
+                    'Entrar no Domus',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Organize tarefas, compras, contas e despesas em um so lugar.',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 28),
+                  TextField(
+                    controller: _emailController,
+                    decoration: const InputDecoration(
+                      labelText: 'E-mail',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.mail_outline),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _passwordController,
+                    decoration: const InputDecoration(
+                      labelText: 'Senha',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.lock_outline),
+                    ),
+                    obscureText: true,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) {
+                      if (!_loading) _login();
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  if (_error != null) ...[
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.errorContainer,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Text(
+                          _error!,
+                          style: TextStyle(
+                            color: theme.colorScheme.onErrorContainer,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  FilledButton(
+                    onPressed: _loading ? null : _login,
+                    child:
+                        _loading
+                            ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                            : const Text('Entrar'),
+                  ),
+                  const SizedBox(height: 10),
+                  OutlinedButton.icon(
+                    onPressed: _loading ? null : _googleSignIn,
+                    icon: const Icon(Icons.login),
+                    label: const Text('Entrar com Google'),
+                  ),
+                  const SizedBox(height: 10),
+                  TextButton(
+                    onPressed:
+                        _loading
+                            ? null
+                            : () {
+                              Navigator.pushReplacementNamed(
+                                context,
+                                '/register',
+                              );
+                            },
+                    child: const Text('Nao tem conta? Cadastrar'),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _passwordController,
-              decoration: const InputDecoration(labelText: 'Senha'),
-              obscureText: true,
-            ),
-            const SizedBox(height: 20),
-            if (_error != null)
-              Text(_error!, style: const TextStyle(color: Colors.red)),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: _loading ? null : _login,
-              child:
-                  _loading
-                      ? const CircularProgressIndicator()
-                      : const Text('Entrar'),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton.icon(
-              onPressed: _loading ? null : _googleSignIn,
-              icon: const Icon(Icons.login),
-              label: const Text("Entrar com Google"),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, '/register');
-              },
-              child: const Text('Não tem conta? Cadastrar'),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LoginMark extends StatelessWidget {
+  final ThemeData theme;
+
+  const _LoginMark({required this.theme});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        width: 86,
+        height: 86,
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primary,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: theme.colorScheme.primary.withValues(alpha: 0.22),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
             ),
           ],
+        ),
+        child: Icon(
+          Icons.home_rounded,
+          size: 46,
+          color: theme.colorScheme.onPrimary,
         ),
       ),
     );

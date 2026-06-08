@@ -31,7 +31,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
       if (response.user != null) {
         setState(() {
-          _success = 'Cadastro realizado com sucesso! Verifique seu e-mail.';
+          _success = 'Cadastro realizado. Verifique seu e-mail.';
         });
       }
     } on AuthException catch (e) {
@@ -50,43 +50,110 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Cadastro')),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: 'E-mail'),
+      appBar: AppBar(
+        title: const Text('Cadastro'),
+        leading: IconButton(
+          tooltip: 'Voltar',
+          onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
+          icon: const Icon(Icons.arrow_back),
+        ),
+      ),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Icon(
+                    Icons.home_rounded,
+                    size: 72,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Criar conta',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  TextField(
+                    controller: _emailController,
+                    decoration: const InputDecoration(
+                      labelText: 'E-mail',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.mail_outline),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _passwordController,
+                    decoration: const InputDecoration(
+                      labelText: 'Senha',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.lock_outline),
+                    ),
+                    obscureText: true,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) {
+                      if (!_loading) _register();
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  if (_error != null)
+                    Text(
+                      _error!,
+                      style: TextStyle(color: theme.colorScheme.error),
+                    ),
+                  if (_success != null)
+                    Text(
+                      _success!,
+                      style: TextStyle(color: theme.colorScheme.primary),
+                    ),
+                  const SizedBox(height: 12),
+                  FilledButton(
+                    onPressed: _loading ? null : _register,
+                    child:
+                        _loading
+                            ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                            : const Text('Cadastrar'),
+                  ),
+                  const SizedBox(height: 10),
+                  TextButton(
+                    onPressed:
+                        _loading
+                            ? null
+                            : () {
+                              Navigator.pushReplacementNamed(context, '/login');
+                            },
+                    child: const Text('Ja tem conta? Entrar'),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _passwordController,
-              decoration: const InputDecoration(labelText: 'Senha'),
-              obscureText: true,
-            ),
-            const SizedBox(height: 20),
-            if (_error != null)
-              Text(_error!, style: const TextStyle(color: Colors.red)),
-            if (_success != null)
-              Text(_success!, style: const TextStyle(color: Colors.green)),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: _loading ? null : _register,
-              child: _loading
-                  ? const CircularProgressIndicator()
-                  : const Text('Cadastrar'),
-            ),
-            const SizedBox(height: 20),
-            TextButton(
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, '/');
-              },
-              child: const Text('Já tem conta? Fazer login'),
-            ),
-          ],
+          ),
         ),
       ),
     );

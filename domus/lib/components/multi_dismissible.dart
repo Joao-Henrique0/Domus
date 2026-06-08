@@ -32,10 +32,18 @@ class MultiDismissible extends StatelessWidget {
       ),
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.startToEnd) {
+          if (_isProtectedBillTransaction(object)) {
+            _showProtectedBillTransactionMessage(context);
+            return false;
+          }
           Navigator.of(context)
               .pushNamed(_getEditRoute(object), arguments: object);
           return false;
         } else if (direction == DismissDirection.endToStart) {
+          if (_isProtectedBillTransaction(object)) {
+            _showProtectedBillTransactionMessage(context);
+            return false;
+          }
           return await _showConfirmDialog(context);
         }
         return false;
@@ -99,6 +107,20 @@ class MultiDismissible extends StatelessWidget {
             child: const Text('Sim'),
           ),
         ],
+      ),
+    );
+  }
+
+  bool _isProtectedBillTransaction(dynamic object) {
+    return object is Transaction && object.isBillGenerated;
+  }
+
+  void _showProtectedBillTransactionMessage(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Essa despesa foi gerada por uma conta. Edite ou exclua pela conta.',
+        ),
       ),
     );
   }
